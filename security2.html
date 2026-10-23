@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aegis Origami Cyber-Physical Shield Matrix</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Three.js for 3D Visuals -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Chart.js for Telemetry Data -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: {
+                            dark: '#080c14',
+                            card: '#0f172a',
+                            border: '#1e293b',
+                            cyan: '#06b6d4',
+                            magenta: '#f43f5e',
+                            emerald: '#10b981',
+                            amber: '#f59e0b',
+                            purple: '#8b5cf6'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #050811;
+            color: #e2e8f0;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        /* Custom Glowing Visuals */
+        .glow-cyan {
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.35);
+        }
+        .glow-red {
+            box-shadow: 0 0 15px rgba(244, 63, 94, 0.4);
+        }
+        .glow-emerald {
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.35);
+        }
+        .text-glow-cyan {
+            text-shadow: 0 0 8px rgba(6, 182, 212, 0.6);
+        }
+        .text-glow-red {
+            text-shadow: 0 0 8px rgba(244, 63, 94, 0.7);
+        }
+        .text-glow-emerald {
+            text-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+        }
+        /* Animated Scanline Overlay */
+        .scanline {
+            background: linear-gradient(
+                to bottom,
+                rgba(255,255,255,0),
+                rgba(255,255,255,0) 50%,
+                rgba(0, 240, 255, 0.03) 50%,
+                rgba(0, 240, 255, 0.03)
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+        }
+        /* Grid Background Pattern */
+        .bg-grid-pattern {
+            background-image: radial-gradient(rgba(14, 165, 233, 0.12) 1px, transparent 0);
+            background-size: 24px 24px;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #090d16;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #06b6d4;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-grid-pattern flex flex-col justify-between text-slate-200 antialiased selection:bg-cyan-500 selection:text-black">
+    <div class="scanline fixed inset-0 z-50 pointer-events-none"></div>
+
+    <!-- Header Navigation Bar -->
+    <header class="border-b border-slate-800 bg-slate-950/80 backdrop-blur-md sticky top-0 z-40 px-4 lg:px-8 py-3">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+            <!-- Brand Info -->
+            <div class="flex items-center space-x-3">
+                <div class="p-2.5 bg-cyan-950/80 border border-cyan-500/30 rounded-xl text-cyan-400 glow-cyan">
+                    <i class="fa-solid fa-shield-halved text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg tracking-wider text-slate-100 flex items-center gap-2">
+                        AEGIS-PHYSICAL <span class="text-xs px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 font-mono">v4.8-HYBRID</span>
+                    </h1>
+                    <p class="text-xs text-slate-400 font-mono">Origami Faraday & Conductive Loom Auto-Mitigation Matrix</p>
+                </div>
+            </div>
+
+            <!-- Global Auto Shield Master Control & Status -->
+            <div class="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
+                <div class="flex items-center gap-3 bg-slate-900/90 border border-slate-800 px-3 py-1.5 rounded-lg">
+                    <div class="flex flex-col text-right">
+                        <span class="text-[10px] text-slate-400 uppercase tracking-widest font-mono">System Integrity</span>
+                        <span id="system-status-text" class="text-xs font-bold font-mono text-emerald-400">NOMINAL / SECURE</span>
+                    </div>
+                    <div id="status-indicator" class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse glow-emerald"></div>
+                </div>
+
+                <!-- Auto Defense Switch Toggle -->
+                <button id="auto-defense-btn" onclick="toggleAutoDefense()" class="flex items-center gap-2.5 px-4 py-2 rounded-xl text-xs font-bold font-mono transition-all duration-300 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30 glow-emerald">
+                    <i id="auto-shield-icon" class="fa-solid fa-lock"></i>
+                    <span id="auto-shield-label">AUTO-SHIELD: ACTIVE</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Dynamic Content Dashboard -->
+    <main class="max-w-7xl w-full mx-auto p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 my-2">
+
+        <!-- LEFT COLUMN: Threat Monitor & Attack Controls (4 Cols) -->
+        <section class="lg:col-span-4 flex flex-col gap-6">
+            
+            <!-- Attack Vector Monitor Box -->
+            <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-xl backdrop-blur-sm">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-sm font-bold uppercase tracking-wider font-mono text-cyan-400 flex items-center gap-2">
+                        <i class="fa-solid fa-radar text-xs"></i> Threat Vector Sensors
+                    </h2>
+                    <span class="text-[10px] text-slate-400 font-mono">FREQ: 2.4 - 6.0 GHz</span>
+                </div>
+
+                <!-- Threat Vector Buttons / Injectors -->
+                <div class="space-y-3">
+                    <!-- MITM Threat -->
+                    <div id="mitm-card" class="p-3.5 bg-slate-950/60 border border-slate-800 rounded-xl flex items-center justify-between transition-all">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                                <i class="fa-solid fa-code-fork"></i>
+                            </div>
+                            <div>
+                                <div class="text-xs font-semibold text-slate-200">MITM Packet Intercept</div>
+                                <div id="mitm-desc" class="text-[10px] text-slate-400 font-mono">Key Exchange: SSL/TLS Secure</div>
+                            </div>
+                        </div>
+                        <button onclick="simulateAttack('MITM')" class="px-2.5 py-1.5 bg-slate-800 hover:bg-cyan-500/20 hover:text-cyan-300 border border-slate-700 hover:border-cyan-500/40 rounded-lg text-xs font-mono transition">
+                            Simulate
+                        </button>
+                    </div>
+
+                    <!-- DDoS Threat -->
+                    <div id="ddos-card" class="p-3.5 bg-slate-950/60 border border-slate-800 rounded-xl flex items-center justify-between transition-all">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                                <i class="fa-solid fa-network-wired"></i>
+                            </div>
+                            <div>
+                                <div class="text-xs font-semibold text-slate-200">DDoS Traffic Volley</div>
+                                <div id="ddos-desc" class="text-[10px] text-slate-400 font-mono">Inbound: 1.2 Gbps (Normal)</div>
+                            </div>
+                        </div>
+                        <button onclick="simulateAttack('DDOS')" class="px-2.5 py-1.5 bg-slate-800 hover:bg-amber-500/20 hover:text-amber-300 border border-slate-700 hover:border-amber-500/40 rounded-lg text-xs font-mono transition">
+                            Simulate
+                        </button>
+                    </div>
+
+                    <!-- SDR / Serial RF Threat -->
+                    <div id="sdr-card" class="p-3.5 bg-slate-950/60 border border-slate-800 rounded-xl flex items-center justify-between transition-all">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-lg bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400">
+                                <i class="fa-solid fa-tower-broadcast"></i>
+                            </div>
+                            <div>
+                                <div class="text-xs font-semibold text-slate-200">SDR RF Jam / Eavesdrop</div>
+                                <div id="sdr-desc" class="text-[10px] text-slate-400 font-mono">Side-Channel Leaks: None</div>
+                            </div>
+                        </div>
+                        <button onclick="simulateAttack('SDR')" class="px-2.5 py-1.5 bg-slate-800 hover:bg-rose-500/20 hover:text-rose-300 border border-slate-700 hover:border-rose-500/40 rounded-lg text-xs font-mono transition">
+                            Simulate
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Manual Reset Button -->
+                <button onclick="clearAttacks()" class="w-full mt-4 py-2 bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-slate-300 text-xs font-mono rounded-xl transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-rotate-left text-xs"></i> Purge Active Threats & Clear Filters
+                </button>
+            </div>
+
+            <!-- Hardware Telemetry & Realtime Gauges -->
+            <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-xl backdrop-blur-sm flex flex-col justify-between">
+                <h2 class="text-sm font-bold uppercase tracking-wider font-mono text-cyan-400 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-microchip text-xs"></i> Telemetry & Physical Metrics
+                </h2>
+
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <div class="bg-slate-950/80 p-3 rounded-xl border border-slate-800">
+                        <span class="text-[10px] text-slate-400 font-mono block mb-1">Faraday Density</span>
+                        <div class="text-base font-bold font-mono text-cyan-400" id="metric-faraday">98.4 %</div>
+                        <div class="w-full bg-slate-800 h-1.5 rounded-full mt-2 overflow-hidden">
+                            <div id="bar-faraday" class="bg-cyan-500 h-full transition-all duration-300" style="width: 98%"></div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-950/80 p-3 rounded-xl border border-slate-800">
+                        <span class="text-[10px] text-slate-400 font-mono block mb-1">Optical Trace Status</span>
+                        <div class="text-base font-bold font-mono text-emerald-400" id="metric-optical">ROUTED</div>
+                        <div class="w-full bg-slate-800 h-1.5 rounded-full mt-2 overflow-hidden">
+                            <div id="bar-optical" class="bg-emerald-500 h-full transition-all duration-300" style="width: 100%"></div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-950/80 p-3 rounded-xl border border-slate-800">
+                        <span class="text-[10px] text-slate-400 font-mono block mb-1">RF Attenuation</span>
+                        <div class="text-base font-bold font-mono text-purple-400" id="metric-rf">-12.4 dB</div>
+                        <div class="w-full bg-slate-800 h-1.5 rounded-full mt-2 overflow-hidden">
+                            <div id="bar-rf" class="bg-purple-500 h-full transition-all duration-300" style="width: 25%"></div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-950/80 p-3 rounded-xl border border-slate-800">
+                        <span class="text-[10px] text-slate-400 font-mono block mb-1">Fold Actuation</span>
+                        <div class="text-base font-bold font-mono text-slate-300" id="metric-fold">0° (OPEN)</div>
+                        <div class="w-full bg-slate-800 h-1.5 rounded-full mt-2 overflow-hidden">
+                            <div id="bar-fold" class="bg-slate-500 h-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bandwidth Telemetry Dynamic Chart -->
+                <div class="bg-slate-950/80 p-3 rounded-xl border border-slate-800">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-[10px] font-mono text-slate-400">Scrubbing Bandwidth (Gbps)</span>
+                        <span id="chart-rate" class="text-[10px] font-mono text-cyan-400">1.2 Gbps</span>
+                    </div>
+                    <div class="h-28 w-full">
+                        <canvas id="telemetryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CENTER & RIGHT COLUMN: 3D Physical Canvas & Controls (8 Cols) -->
+        <section class="lg:col-span-8 flex flex-col gap-6">
+
+            <!-- Interactive 3D Origami & Loom Canvas Enclosure -->
+            <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-xl backdrop-blur-sm relative flex flex-col">
+                <div class="flex flex-wrap justify-between items-center gap-2 mb-3 z-10">
+                    <div class="flex items-center gap-2">
+                        <h2 class="text-sm font-bold uppercase tracking-wider font-mono text-cyan-400 flex items-center gap-2">
+                            <i class="fa-solid fa-cube text-xs"></i> Cyber-Physical Origami & Loom Engine
+                        </h2>
+                        <span id="mode-badge" class="px-2 py-0.5 rounded text-[10px] font-mono bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                            MODE: MIURA-FOLD FARADAY CAGE
+                        </span>
+                    </div>
+
+                    <!-- Canvas Visualization Selector -->
+                    <div class="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800 text-xs font-mono">
+                        <button onclick="setCanvasMode('origami')" id="btn-mode-origami" class="px-2.5 py-1 rounded-md bg-cyan-500/20 text-cyan-300 font-semibold transition">
+                            Origami Cage
+                        </button>
+                        <button onclick="setCanvasMode('loom')" id="btn-mode-loom" class="px-2.5 py-1 rounded-md text-slate-400 hover:text-slate-200 transition">
+                            Conductive Loom
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 3D Canvas Rendering Area -->
+                <div class="relative w-full h-[380px] sm:h-[420px] bg-slate-950 rounded-xl border border-slate-800/80 overflow-hidden group">
+                    <canvas id="physicalCanvas" class="w-full h-full cursor-grab active:cursor-grabbing"></canvas>
+                    
+                    <!-- Overlay Canvas Controls Info -->
+                    <div class="absolute bottom-3 left-3 bg-slate-900/90 border border-slate-800 backdrop-blur-md px-3 py-1.5 rounded-lg text-[10px] font-mono text-slate-400 pointer-events-none flex items-center gap-3">
+                        <span><i class="fa-solid fa-arrows-spin text-cyan-400"></i> Drag to rotate 3D viewport</span>
+                        <span class="text-slate-600">|</span>
+                        <span id="fabrication-type-label" class="text-cyan-300">Material: Copper-Kevlar Mesh</span>
+                    </div>
+
+                    <!-- Live Mechanical Action Indicator Overlay -->
+                    <div id="mechanical-action-overlay" class="absolute top-3 right-3 bg-slate-900/90 border border-slate-800 px-3 py-1.5 rounded-lg text-xs font-mono text-slate-300 flex items-center gap-2">
+                        <div class="w-2 h-2 rounded-full bg-slate-500" id="mech-led"></div>
+                        <span id="mech-status-text">Servo Motors Idle</span>
+                    </div>
+                </div>
+
+                <!-- Interactive Controls for Origami Folding & Loom Weaving -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <!-- Manual Folding Slider -->
+                    <div class="bg-slate-950/60 p-3.5 border border-slate-800 rounded-xl">
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-xs font-mono font-semibold text-slate-300 flex items-center gap-2">
+                                <i class="fa-solid fa-compress text-cyan-400"></i> Miura Origami Fold Compression
+                            </label>
+                            <span id="fold-percent-label" class="text-xs font-mono text-cyan-400 font-bold">0% (Open)</span>
+                        </div>
+                        <input id="fold-range-slider" type="range" min="0" max="100" value="0" oninput="onManualFoldChange(this.value)" class="w-full accent-cyan-400 bg-slate-800 rounded-lg cursor-pointer h-2">
+                        <div class="flex justify-between text-[10px] font-mono text-slate-500 mt-1">
+                            <span>0% Unfolded (Max Spectrum)</span>
+                            <span>100% Sealed (Faraday Cage)</span>
+                        </div>
+                    </div>
+
+                    <!-- Weave Pattern & Fabric Selector -->
+                    <div class="bg-slate-950/60 p-3.5 border border-slate-800 rounded-xl flex flex-col justify-between">
+                        <label class="text-xs font-mono font-semibold text-slate-300 flex items-center gap-2 mb-2">
+                            <i class="fa-solid fa-sliders text-cyan-400"></i> Loom Fiber Matrix Preset
+                        </label>
+                        <select id="weave-preset-select" onchange="changeWeavePreset(this.value)" class="bg-slate-900 border border-slate-700 text-xs font-mono text-cyan-300 rounded-lg p-2 focus:outline-none focus:border-cyan-500">
+                            <option value="copper-kevlar">Copper-Kevlar Dual Weave (RF + Physical Impact)</option>
+                            <option value="carbon-optical">Carbon-Fiber Optical Grid (High Bandwidth/Laser Defense)</option>
+                            <option value="liquid-gallium">Liquid-Gallium Liquid Metal Wire (Dynamic Path Shift)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Real-Time Defense Log Terminal -->
+            <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-xl backdrop-blur-sm flex flex-col">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-sm font-bold uppercase tracking-wider font-mono text-cyan-400 flex items-center gap-2">
+                        <i class="fa-solid fa-terminal text-xs"></i> Autonomous Mitigation Log Console
+                    </h2>
+                    <button onclick="clearConsoleLogs()" class="text-[10px] font-mono text-slate-400 hover:text-cyan-400 transition">
+                        Clear Console
+                    </button>
+                </div>
+                <div id="console-log-box" class="h-36 bg-slate-950 rounded-xl border border-slate-800/80 p-3 font-mono text-xs overflow-y-auto space-y-1.5 text-slate-300">
+                    <div class="text-slate-500">[SYSTEM INIT] Aegis Cyber-Physical Auto-Shield Engine Loaded.</div>
+                    <div class="text-slate-500">[SENSOR CHECK] All Origami Actuators and Conductive Matrix traces verified nominal.</div>
+                    <div class="text-emerald-400">[AUTO-SHIELD] Protection active. Listening for MITM, DDoS, or SDR spectrum anomalies...</div>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- App Footer -->
+    <footer class="border-t border-slate-800/80 bg-slate-950/80 py-3 px-4 text-center text-xs font-mono text-slate-500">
+        AEGIS-SHIELD Physical-Cyber Enclosure | Origami & Loom Fabrication Auto-Defense Protocol
+    </footer>
+
+    <!-- JavaScript Logic & Three.js Simulation Scripts -->
+    <script>
+        // Global Application State Variables
+        let autoShieldActive = true;
+        let activeAttacks = { MITM: false, DDOS: false, SDR: false };
+        let canvasMode = 'origami'; // 'origami' or 'loom'
+        let currentFoldValue = 0; // 0 (unfolded/open) to 1 (fully folded/sealed)
+        let targetFoldValue = 0;
+        let weavePreset = 'copper-kevlar';
+
+        // Three.js Scene Components
+        let scene, camera, renderer;
+        let origamiMeshGroup, loomMeshGroup;
+        let origamiFacets = [];
+        let loomThreads = [];
+        let isDragging = false, previousMousePosition = { x: 0, y: 0 };
+
+        // Chart.js Telemetry Data
+        let telemetryChart;
+        let chartDataPoints = [1.2, 1.1, 1.3, 1.2, 1.25, 1.18, 1.21, 1.24, 1.19, 1.22];
+
+        // Audio Effects Synthesizer using Web Audio API (Safe initialization)
+        let audioCtx = null;
+
+        function getAudioContext() {
+            try {
+                if (!audioCtx) {
+                    const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtxClass) {
+                        audioCtx = new AudioCtxClass();
+                    }
+                }
+                if (audioCtx && audioCtx.state === 'suspended') {
+                    audioCtx.resume().catch(() => {});
+                }
+            } catch(e) {
+                console.warn("AudioContext init error:", e);
+            }
+            return audioCtx;
+        }
+        
+        function playTone(freq, type = 'sine', duration = 0.15) {
+            try {
+                const ctx = getAudioContext();
+                if (!ctx) return;
+
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, ctx.currentTime);
+                gain.gain.setValueAtTime(0.08, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + duration);
+            } catch(e) {}
+        }
+
+        function playAlertSound() {
+            playTone(880, 'sawtooth', 0.2);
+            setTimeout(() => playTone(440, 'sawtooth', 0.25), 150);
+        }
+
+        function playMechanicalSound() {
+            playTone(150, 'triangle', 0.1);
+        }
+
+        // Initialize Application
+        window.addEventListener('load', () => {
+            try {
+                if (typeof THREE !== 'undefined') {
+                    initThreeJS();
+                } else {
+                    console.error("Three.js standard library not found.");
+                }
+                if (typeof Chart !== 'undefined') {
+                    initChartJS();
+                } else {
+                    console.error("Chart.js library not found.");
+                }
+                animate();
+                logConsole("System running in real-time monitor mode.", "info");
+            } catch(err) {
+                console.error("Initialization Error:", err);
+            }
+        });
+
+        // Logging function for UI Console Terminal
+        function logConsole(message, type = 'info') {
+            const box = document.getElementById('console-log-box');
+            if (!box) return;
+            const time = new Date().toLocaleTimeString();
+            let colorClass = 'text-slate-300';
+            if (type === 'warn') colorClass = 'text-amber-400';
+            if (type === 'danger') colorClass = 'text-rose-400 font-semibold';
+            if (type === 'success') colorClass = 'text-emerald-400';
+
+            const entry = document.createElement('div');
+            entry.className = colorClass;
+            entry.innerHTML = `<span class="text-slate-500">[${time}]</span> ${message}`;
+            box.appendChild(entry);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function clearConsoleLogs() {
+            const box = document.getElementById('console-log-box');
+            if (box) {
+                box.innerHTML = '<div class="text-slate-500">[SYSTEM RESET] Console cleared.</div>';
+            }
+        }
+
+        // Toggle Auto-Shield Master Protocol
+        function toggleAutoDefense() {
+            autoShieldActive = !autoShieldActive;
+            const btn = document.getElementById('auto-defense-btn');
+            const icon = document.getElementById('auto-shield-icon');
+            const label = document.getElementById('auto-shield-label');
+
+            if (autoShieldActive) {
+                btn.className = "flex items-center gap-2.5 px-4 py-2 rounded-xl text-xs font-bold font-mono transition-all duration-300 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30 glow-emerald";
+                icon.className = "fa-solid fa-lock";
+                label.innerText = "AUTO-SHIELD: ACTIVE";
+                logConsole("Master Auto-Defense Engine ACTIVATED.", "success");
+                playTone(600, 'sine', 0.1);
+                
+                // Trigger auto response if attacks are currently live
+                checkAndTriggerAutoMitigation();
+            } else {
+                btn.className = "flex items-center gap-2.5 px-4 py-2 rounded-xl text-xs font-bold font-mono transition-all duration-300 bg-slate-800 text-slate-400 border border-slate-700 hover:bg-slate-700";
+                icon.className = "fa-solid fa-lock-open";
+                label.innerText = "AUTO-SHIELD: MANUAL";
+                logConsole("Master Auto-Defense engine set to MANUAL OVERRIDE.", "warn");
+                playTone(300, 'sine', 0.1);
+            }
+        }
+
+        // Simulate Attack Vectors
+        function simulateAttack(type) {
+            playAlertSound();
+            if (type === 'MITM') {
+                activeAttacks.MITM = true;
+                logConsole("ALERT: MITM Packet Intercept detected on primary bus line!", "danger");
+                document.getElementById('mitm-card').className = "p-3.5 bg-rose-950/40 border border-rose-500/60 rounded-xl flex items-center justify-between transition-all glow-red";
+                document.getElementById('mitm-desc').innerText = "STATUS: Key Exchange Tampered!";
+                document.getElementById('mitm-desc').className = "text-[10px] text-rose-400 font-mono font-bold";
+            } else if (type === 'DDOS') {
+                activeAttacks.DDOS = true;
+                logConsole("ALERT: High-volume DDoS traffic spike registered (48.5 Gbps)!", "danger");
+                document.getElementById('ddos-card').className = "p-3.5 bg-rose-950/40 border border-rose-500/60 rounded-xl flex items-center justify-between transition-all glow-red";
+                document.getElementById('ddos-desc').innerText = "Inbound: 48.5 Gbps (SATURATED)";
+                document.getElementById('ddos-desc').className = "text-[10px] text-rose-400 font-mono font-bold";
+            } else if (type === 'SDR') {
+                activeAttacks.SDR = true;
+                logConsole("ALERT: SDR RF Eavesdropping & Spectrum Jamming active!", "danger");
+                document.getElementById('sdr-card').className = "p-3.5 bg-rose-950/40 border border-rose-500/60 rounded-xl flex items-center justify-between transition-all glow-red";
+                document.getElementById('sdr-desc').innerText = "Side-Channel: Leaking RF Freq!";
+                document.getElementById('sdr-desc').className = "text-[10px] text-rose-400 font-mono font-bold";
+            }
+
+            updateGlobalSystemStatus();
+
+            if (autoShieldActive) {
+                checkAndTriggerAutoMitigation();
+            }
+        }
+
+        // Clear Attacks & Purge
+        function clearAttacks() {
+            activeAttacks = { MITM: false, DDOS: false, SDR: false };
+            logConsole("Purging threat vectors and restoring baseline hardware routes...", "info");
+
+            document.getElementById('mitm-card').className = "p-3.5 bg-slate-950/60 border border-slate-800 rounded-xl flex items-center justify-between transition-all";
+            document.getElementById('mitm-desc').innerText = "Key Exchange: SSL/TLS Secure";
+            document.getElementById('mitm-desc').className = "text-[10px] text-slate-400 font-mono";
+
+            document.getElementById('ddos-card').className = "p-3.5 bg-slate-950/60 border border-slate-800 rounded-xl flex items-center justify-between transition-all";
+            document.getElementById('ddos-desc').innerText = "Inbound: 1.2 Gbps (Normal)";
+            document.getElementById('ddos-desc').className = "text-[10px] text-slate-400 font-mono";
+
+            document.getElementById('sdr-card').className = "p-3.5 bg-slate-950/60 border border-slate-800 rounded-xl flex items-center justify-between transition-all";
+            document.getElementById('sdr-desc').innerText = "Side-Channel Leaks: None";
+            document.getElementById('sdr-desc').className = "text-[10px] text-slate-400 font-mono";
+
+            // Return physical folds to open
+            targetFoldValue = 0;
+            document.getElementById('fold-range-slider').value = 0;
+            onManualFoldChange(0);
+
+            updateGlobalSystemStatus();
+            playTone(523.25, 'sine', 0.2);
+        }
+
+        // Check active threats and execute auto physical responses
+        function checkAndTriggerAutoMitigation() {
+            if (activeAttacks.SDR || activeAttacks.MITM) {
+                logConsole("[AUTO-MITIGATION] Actuating Miura-Fold Faraday structure to 100% enclosure.", "success");
+                targetFoldValue = 1.0; // Fold completely closed
+                document.getElementById('fold-range-slider').value = 100;
+                updateFoldUI(100);
+            }
+            if (activeAttacks.MITM || activeAttacks.DDOS) {
+                logConsole("[AUTO-MITIGATION] Re-weaving conductive matrix & routing optical trace lines.", "success");
+                if (canvasMode !== 'loom' && !activeAttacks.SDR) {
+                    setCanvasMode('loom');
+                }
+            }
+        }
+
+        function updateGlobalSystemStatus() {
+            const statusText = document.getElementById('system-status-text');
+            const statusInd = document.getElementById('status-indicator');
+
+            const hasAttack = activeAttacks.MITM || activeAttacks.DDOS || activeAttacks.SDR;
+            if (hasAttack) {
+                statusText.innerText = "ATTACK DETECTED - MITIGATING";
+                statusText.className = "text-xs font-bold font-mono text-rose-400 text-glow-red";
+                statusInd.className = "w-3 h-3 rounded-full bg-rose-500 animate-ping glow-red";
+            } else {
+                statusText.innerText = "NOMINAL / SECURE";
+                statusText.className = "text-xs font-bold font-mono text-emerald-400 text-glow-emerald";
+                statusInd.className = "w-3 h-3 rounded-full bg-emerald-500 animate-pulse glow-emerald";
+            }
+        }
+
+        // Manual slider input handler
+        function onManualFoldChange(val) {
+            targetFoldValue = val / 100;
+            updateFoldUI(val);
+            playMechanicalSound();
+        }
+
+        function updateFoldUI(val) {
+            document.getElementById('fold-percent-label').innerText = `${Math.round(val)}% (${val > 80 ? 'Sealed Cage' : val > 20 ? 'Partial Shield' : 'Open'})`;
+        }
+
+        // Mode Switching (Origami vs Loom)
+        function setCanvasMode(mode) {
+            canvasMode = mode;
+            const btnOrigami = document.getElementById('btn-mode-origami');
+            const btnLoom = document.getElementById('btn-mode-loom');
+            const badge = document.getElementById('mode-badge');
+            const label = document.getElementById('fabrication-type-label');
+
+            if (mode === 'origami') {
+                btnOrigami.className = "px-2.5 py-1 rounded-md bg-cyan-500/20 text-cyan-300 font-semibold transition";
+                btnLoom.className = "px-2.5 py-1 rounded-md text-slate-400 hover:text-slate-200 transition";
+                badge.innerText = "MODE: MIURA-FOLD FARADAY CAGE";
+                label.innerText = "Material: Copper-Mesh Fold Enclosure";
+                if (origamiMeshGroup) origamiMeshGroup.visible = true;
+                if (loomMeshGroup) loomMeshGroup.visible = false;
+                logConsole("Switched view mode to Origami Faraday Structure.", "info");
+            } else {
+                btnLoom.className = "px-2.5 py-1 rounded-md bg-cyan-500/20 text-cyan-300 font-semibold transition";
+                btnOrigami.className = "px-2.5 py-1 rounded-md text-slate-400 hover:text-slate-200 transition";
+                badge.innerText = "MODE: CONDUCTIVE LOOM MATRIX";
+                label.innerText = "Fabrication: Optical-Electrical Interconnect Matrix";
+                if (origamiMeshGroup) origamiMeshGroup.visible = false;
+                if (loomMeshGroup) loomMeshGroup.visible = true;
+                logConsole("Switched view mode to Conductive Loom Weaving Matrix.", "info");
+            }
+            playTone(700, 'sine', 0.08);
+        }
+
+        function changeWeavePreset(preset) {
+            weavePreset = preset;
+            logConsole(`Applied Loom Fiber Matrix Preset: ${preset.toUpperCase()}`, "info");
+            updateLoomColors();
+        }
+
+        // -------------------------------------------------------------
+        // Three.js 3D Visual Simulation Engine (with WebGL Fallback)
+        // -------------------------------------------------------------
+        let isWebGLSupported = true;
+
+        function initThreeJS() {
+            const container = document.getElementById('physicalCanvas');
+            if (!container) return;
+            const width = container.clientWidth || 600;
+            const height = container.clientHeight || 400;
+
+            try {
+                // Check WebGL availability before attempting renderer creation
+                const canvasTest = document.createElement('canvas');
+                const gl = canvasTest.getContext('webgl') || canvasTest.getContext('experimental-webgl');
+                if (!gl) {
+                    throw new Error('WebGL context is not supported or disabled by the browser/GPU driver.');
+                }
+
+                scene = new THREE.Scene();
+                scene.fog = new THREE.FogExp2(0x050811, 0.03);
+
+                camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+                camera.position.set(0, 4, 8);
+                camera.lookAt(0, 0, 0);
+
+                // Attempt WebGLRenderer creation with error handling
+                renderer = new THREE.WebGLRenderer({ canvas: container, antialias: true, alpha: true });
+                renderer.setSize(width, height);
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+                // Lighting setup
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+                scene.add(ambientLight);
+
+                const dirLight1 = new THREE.DirectionalLight(0x06b6d4, 1.2);
+                dirLight1.position.set(5, 10, 7);
+                scene.add(dirLight1);
+
+                const dirLight2 = new THREE.DirectionalLight(0xf43f5e, 0.8);
+                dirLight2.position.set(-5, -5, -5);
+                scene.add(dirLight2);
+
+                // Construct 3D Groups
+                origamiMeshGroup = new THREE.Group();
+                loomMeshGroup = new THREE.Group();
+                scene.add(origamiMeshGroup);
+                scene.add(loomMeshGroup);
+
+                buildMiuraOrigamiCage();
+                buildConductiveLoom();
+
+                loomMeshGroup.visible = false; // default view: origami
+
+                // Orbit Rotation Mouse Controls
+                container.addEventListener('mousedown', (e) => { isDragging = true; previousMousePosition = { x: e.clientX, y: e.clientY }; });
+                window.addEventListener('mouseup', () => { isDragging = false; });
+                container.addEventListener('mousemove', (e) => {
+                    if (!isDragging) return;
+                    const deltaMove = { x: e.clientX - previousMousePosition.x, y: e.clientY - previousMousePosition.y };
+                    const targetGroup = canvasMode === 'origami' ? origamiMeshGroup : loomMeshGroup;
+                    if (targetGroup) {
+                        targetGroup.rotation.y += deltaMove.x * 0.008;
+                        targetGroup.rotation.x += deltaMove.y * 0.008;
+                    }
+                    previousMousePosition = { x: e.clientX, y: e.clientY };
+                });
+
+                window.addEventListener('resize', onWindowResize);
+            } catch (err) {
+                console.warn("WebGL initialization failed, falling back to 2D Canvas rendering mode:", err);
+                isWebGLSupported = false;
+                logConsole("WebGL context unavailable. Fallback 2D visualizer active.", "warn");
+            }
+        }
+
+        // Build Miura-Fold Origami Enclosure
+        function buildMiuraOrigamiCage() {
+            const cols = 6;
+            const rows = 6;
+            const size = 0.6;
+
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const geometry = new THREE.PlaneGeometry(size, size, 2, 2);
+                    const material = new THREE.MeshStandardMaterial({
+                        color: 0x06b6d4,
+                        wireframe: false,
+                        roughness: 0.3,
+                        metalness: 0.8,
+                        side: THREE.DoubleSide
+                    });
+                    const facet = new THREE.Mesh(geometry, material);
+
+                    // Position in grid
+                    const x = (c - cols / 2 + 0.5) * size;
+                    const z = (r - rows / 2 + 0.5) * size;
+                    facet.position.set(x, 0, z);
+
+                    // Wireframe outline overlay for technical feel
+                    const wireMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, wireframe: true });
+                    const wireMesh = new THREE.Mesh(geometry, wireMat);
+                    facet.add(wireMesh);
+
+                    facet.userData = {
+                        baseX: x,
+                        baseZ: z,
+                        row: r,
+                        col: c
+                    };
+
+                    origamiFacets.push(facet);
+                    origamiMeshGroup.add(facet);
+                }
+            }
+
+            // Central Protected Cyber Core Unit
+            const coreGeo = new THREE.BoxGeometry(0.8, 0.8, 0.8);
+            const coreMat = new THREE.MeshStandardMaterial({ color: 0x10b981, emissive: 0x047857, roughness: 0.2 });
+            const core = new THREE.Mesh(coreGeo, coreMat);
+            core.position.set(0, 0, 0);
+            origamiMeshGroup.add(core);
+        }
+
+        // Build Loom Weaving Matrix
+        function buildConductiveLoom() {
+            const threadCount = 28;
+            const radius = 2.2;
+
+            for (let i = 0; i < threadCount; i++) {
+                const angle = (i / threadCount) * Math.PI * 2;
+                const p1 = new THREE.Vector3(Math.cos(angle) * radius, -1.2, Math.sin(angle) * radius);
+                const p2 = new THREE.Vector3(Math.cos(angle + Math.PI / 2) * radius, 1.2, Math.sin(angle + Math.PI / 2) * radius);
+
+                const curve = new THREE.LineCurve3(p1, p2);
+                const tubeGeo = new THREE.TubeGeometry(curve, 20, 0.03, 8, false);
+                const tubeMat = new THREE.MeshStandardMaterial({
+                    color: 0x06b6d4,
+                    emissive: 0x0284c7,
+                    roughness: 0.2,
+                    metalness: 0.9
+                });
+
+                const thread = new THREE.Mesh(tubeGeo, tubeMat);
+                thread.userData = { angle, originalP1: p1, originalP2: p2, index: i };
+                loomThreads.push(thread);
+                loomMeshGroup.add(thread);
+            }
+        }
+
+        function updateLoomColors() {
+            let col = 0x06b6d4;
+            let emissive = 0x0284c7;
+
+            if (weavePreset === 'carbon-optical') {
+                col = 0x10b981;
+                emissive = 0x047857;
+            } else if (weavePreset === 'liquid-gallium') {
+                col = 0x8b5cf6;
+                emissive = 0x6d28d9;
+            }
+
+            loomThreads.forEach(t => {
+                t.material.color.setHex(col);
+                t.material.emissive.setHex(emissive);
+            });
+        }
+
+        // Render Loop & Animation Updates
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Smooth Interpolation of origami fold value
+            currentFoldValue += (targetFoldValue - currentFoldValue) * 0.08;
+
+            if (isWebGLSupported && renderer && scene && camera) {
+                // Animate Miura Fold Facets physically closing up into a sealed cage
+                origamiFacets.forEach((f) => {
+                    const fold = currentFoldValue;
+                    const direction = (f.userData.row + f.userData.col) % 2 === 0 ? 1 : -1;
+                    
+                    // Compress grid positions inward
+                    f.position.x = f.userData.baseX * (1 - fold * 0.7);
+                    f.position.z = f.userData.baseZ * (1 - fold * 0.7);
+                    f.position.y = Math.sin(fold * Math.PI) * 0.5 * direction;
+
+                    // Rotate facets along origami creases
+                    f.rotation.x = fold * Math.PI * 0.45 * direction;
+                    f.rotation.y = fold * Math.PI * 0.25 * direction;
+                });
+
+                // Animate Loom weaving lines when attack is active or routing
+                loomThreads.forEach((t) => {
+                    if (activeAttacks.MITM || activeAttacks.DDOS) {
+                        t.rotation.y += 0.01;
+                    } else {
+                        t.rotation.y += 0.002;
+                    }
+                });
+
+                // Gentle background spin
+                if (origamiMeshGroup) origamiMeshGroup.rotation.y += 0.002;
+                if (loomMeshGroup) loomMeshGroup.rotation.y += 0.003;
+
+                renderer.render(scene, camera);
+            } else {
+                // 2D Canvas Fallback Renderer for environments without WebGL
+                render2DFallback();
+            }
+
+            // Telemetry Mechanical Indicators Updates
+            updateTelemetryDisplay();
+        }
+
+        // 2D Canvas Visualizer when WebGL is unsupported/disabled
+        function render2DFallback() {
+            const canvas = document.getElementById('physicalCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return;
+
+            const w = canvas.width = canvas.clientWidth || 600;
+            const h = canvas.height = canvas.clientHeight || 400;
+            const cx = w / 2;
+            const cy = h / 2;
+
+            ctx.clearRect(0, 0, w, h);
+
+            if (canvasMode === 'origami') {
+                // Draw 2D Miura Fold Cage
+                const fold = currentFoldValue;
+                const gridSize = 6;
+                const baseSpacing = 35 * (1 - fold * 0.5);
+
+                ctx.strokeStyle = '#06b6d4';
+                ctx.lineWidth = 1.5;
+
+                for (let r = 0; r < gridSize; r++) {
+                    for (let c = 0; c < gridSize; c++) {
+                        const x = cx + (c - gridSize / 2 + 0.5) * baseSpacing;
+                        const y = cy + (r - gridSize / 2 + 0.5) * baseSpacing;
+                        const size = baseSpacing * 0.8;
+
+                        ctx.fillStyle = fold > 0.8 ? 'rgba(6, 182, 212, 0.4)' : 'rgba(15, 23, 42, 0.6)';
+                        ctx.beginPath();
+                        ctx.rect(x - size / 2, y - size / 2, size, size);
+                        ctx.fill();
+                        ctx.stroke();
+                    }
+                }
+
+                // Protected Core
+                ctx.fillStyle = '#10b981';
+                ctx.beginPath();
+                ctx.arc(cx, cy, 15, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                // Draw 2D Conductive Loom Threads
+                const numThreads = 20;
+                const radius = 100;
+                const time = Date.now() * 0.002;
+
+                ctx.lineWidth = 1.5;
+                ctx.strokeStyle = weavePreset === 'carbon-optical' ? '#10b981' : weavePreset === 'liquid-gallium' ? '#8b5cf6' : '#06b6d4';
+
+                for (let i = 0; i < numThreads; i++) {
+                    const angle = (i / numThreads) * Math.PI * 2 + time;
+                    const x1 = cx + Math.cos(angle) * radius;
+                    const y1 = cy + Math.sin(angle) * radius;
+                    const x2 = cx + Math.cos(angle + Math.PI / 2) * radius;
+                    const y2 = cy + Math.sin(angle + Math.PI / 2) * radius;
+
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.stroke();
+                }
+            }
+        }
+
+        function updateTelemetryDisplay() {
+            const faradayDensity = 12 + (currentFoldValue * 86.4);
+            const rfAttenuation = -12.4 - (currentFoldValue * 72);
+            const foldDegrees = Math.round(currentFoldValue * 90);
+
+            const mFaraday = document.getElementById('metric-faraday');
+            const bFaraday = document.getElementById('bar-faraday');
+            const mRf = document.getElementById('metric-rf');
+            const bRf = document.getElementById('bar-rf');
+            const mFold = document.getElementById('metric-fold');
+            const bFold = document.getElementById('bar-fold');
+
+            if (mFaraday) mFaraday.innerText = `${faradayDensity.toFixed(1)} %`;
+            if (bFaraday) bFaraday.style.width = `${faradayDensity}%`;
+
+            if (mRf) mRf.innerText = `${rfAttenuation.toFixed(1)} dB`;
+            if (bRf) bRf.style.width = `${Math.min(100, Math.abs(rfAttenuation))}%`;
+
+            if (mFold) mFold.innerText = `${foldDegrees}° (${currentFoldValue > 0.85 ? 'SEALED' : currentFoldValue > 0.1 ? 'PARTIAL' : 'OPEN'})`;
+            if (bFold) bFold.style.width = `${currentFoldValue * 100}%`;
+
+            const mechLed = document.getElementById('mech-led');
+            const mechStatus = document.getElementById('mech-status-text');
+
+            if (mechLed && mechStatus) {
+                if (Math.abs(targetFoldValue - currentFoldValue) > 0.01) {
+                    mechLed.className = "w-2 h-2 rounded-full bg-amber-400 animate-ping";
+                    mechStatus.innerText = "Actuators Folding...";
+                } else {
+                    mechLed.className = "w-2 h-2 rounded-full bg-emerald-400";
+                    mechStatus.innerText = "Servo Motors Idle";
+                }
+            }
+        }
+
+        function onWindowResize() {
+            const container = document.getElementById('physicalCanvas');
+            if (!container || !renderer || !camera) return;
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+
+        // -------------------------------------------------------------
+        // Dynamic Chart.js Telemetry Stream
+        // -------------------------------------------------------------
+        function initChartJS() {
+            const canvasEl = document.getElementById('telemetryChart');
+            if (!canvasEl) return;
+            const ctx = canvasEl.getContext('2d');
+            telemetryChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['', '', '', '', '', '', '', '', '', ''],
+                    datasets: [{
+                        label: 'Traffic Flow (Gbps)',
+                        data: chartDataPoints,
+                        borderColor: '#06b6d4',
+                        backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 2,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { display: false },
+                        y: {
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#64748b', font: { family: 'JetBrains Mono', size: 9 } }
+                        }
+                    }
+                }
+            });
+
+            // Live telemetry tick loop
+            setInterval(() => {
+                let nextVal = 1.2 + (Math.random() * 0.2 - 0.1);
+                if (activeAttacks.DDOS) {
+                    nextVal = 48.5 + (Math.random() * 8.0 - 4.0);
+                } else if (activeAttacks.MITM) {
+                    nextVal = 3.5 + (Math.random() * 1.5);
+                }
+
+                chartDataPoints.shift();
+                chartDataPoints.push(nextVal);
+                if (telemetryChart) telemetryChart.update();
+
+                const rateEl = document.getElementById('chart-rate');
+                if (rateEl) rateEl.innerText = `${nextVal.toFixed(1)} Gbps`;
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
